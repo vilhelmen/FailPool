@@ -6,10 +6,10 @@ from threading import Event
 
 class FailPool(multiprocessing.pool.Pool):
     """
-    Multiprocessing Pool that chlorinates the pool when a worker dies
+    Multiprocessing Pool that chlorinates the pool when a worker dies in it
 
     Uses the error_callback to flag if a worker died.
-    If it did, apply_async and join will terminate the pool and raise a ProcessingState
+    If it did, apply_async and join will terminate the pool and raise the original exception
 
     Don't use a job submit function without overriding it here
     """
