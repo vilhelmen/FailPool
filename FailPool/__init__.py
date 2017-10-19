@@ -2,7 +2,7 @@
 
 # I have no idea what I'm doing
 
-from .ThreadPoolExecutor import FailThreadPool
+from .ThreadPoolExecutor import FailThreadPoolExecutor
 from .multiprocessing import FailPool
 
-__all__ = ['FailThreadPool', 'FailPool']
+__all__ = ['FailThreadPoolExecutor', 'FailPool']
