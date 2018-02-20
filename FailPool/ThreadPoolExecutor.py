@@ -110,6 +110,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
                 while t.is_alive():
                     t.join(timeout=self._check_timeout)
                     if not self._queue_dumped:  # if we dumped the queue, nothing to do but move on
+                        logging.info(f'~{self._work_queue.qsize()} jobs remaining')
                         # with self._fail_lock: # Once again, don't bother. If we miss it by one iteration, who cares
                         if self._fail_flag.is_set():
                             self._dump_queue()
