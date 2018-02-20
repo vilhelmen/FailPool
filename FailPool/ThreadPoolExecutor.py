@@ -3,6 +3,7 @@
 import concurrent.futures
 import threading
 import queue
+import logging
 
 
 class _FailWorkItem(concurrent.futures.thread._WorkItem):

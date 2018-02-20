@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import multiprocessing.pool
+import logging
 from threading import Event
 
 
