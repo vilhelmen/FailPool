@@ -51,7 +51,7 @@ class FailPool(multiprocessing.pool.Pool):
         Join, but periodically checks fail state
         """
         while not self._timeout_join(10):
-        	logging.info(f'~{self._taskqueue.qsize()} jobs remaining')
+            logging.info(f'~{self._taskqueue.qsize()} jobs remaining')
             if self.fail_flag.is_set():
                 self._eat_it()
         if self.fail_flag.is_set():
