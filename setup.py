@@ -6,8 +6,8 @@ setup(name='FailPool',
       version='0.0.1',
       description='Processing pools that grow up and blow away.',
       author='Will Starms',
-      author_email='vilhelmen!AT!gmail.com',
       packages=find_packages(),
       license='Copyleft',
       install_requires=['progressbar2'],
+      python_requires='3.6, 3.7'
       )

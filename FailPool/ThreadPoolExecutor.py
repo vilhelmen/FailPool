@@ -4,6 +4,7 @@ import concurrent.futures
 import threading
 import queue
 import logging
+import sys
 
 
 class _FailWorkItem(concurrent.futures.thread._WorkItem):
@@ -54,7 +55,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
         self._check_timeout = 10
         super().__init__(*args, **kwargs)
 
-    __init__.__doc__ = concurrent.futures.thread.ThreadPoolExecutor.__init__.__doc__
+    __init__.__doc__ = concurrent.futures.thread.ThreadPoolExecutorThreadPoolExecutor.__init__.__doc__
 
     def _dump_queue(self):
         """
@@ -70,6 +71,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
     def _eat_it(self):
         raise self._fail_reason
 
+    # Why is this not being marked as an override
     def submit(self, fn, *args, **kwargs):
         # self._fail_lock.aquire()  # Don't bother locking, if we ever so slightly miss seeing it get set, oh well.
         if self._fail_flag.is_set():
@@ -79,8 +81,14 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
         # self._fail_lock.release()
 
         with self._shutdown_lock:
+            if sys.version_info.minor == 7:
+                if self._broken:
+                    raise concurrent.futures.thread.BrokenThreadPool(self._broken)
             if self._shutdown:
                 raise RuntimeError('cannot schedule new futures after shutdown')
+            if sys.version_info.minor == 7:
+                if concurrent.futures.thread._shutdown:
+                    raise RuntimeError('cannot schedule new futures after interpreter shutdown')
 
             f = concurrent.futures._base.Future()
             # w = _FailWorkItem(f, fn, args, kwargs,

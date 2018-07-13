@@ -13,6 +13,7 @@ class FailPool(multiprocessing.pool.Pool):
     If it did, apply_async and join will terminate the pool and raise the original exception
 
     Don't use a job submit function without overriding it here
+        Overriding enables error_callback for test job errors and tests for pool failure on job submit
     """
 
     def __init__(self, *args, **kwargs):
@@ -76,3 +77,18 @@ class FailPool(multiprocessing.pool.Pool):
         for p in self._pool:
             p.join()
         return True
+
+
+class FailThreadPool(multiprocessing.pool.ThreadPool, FailPool):
+    """
+    Multiprocessing ThreadPool that chlorinates the pool when a worker dies in it.
+
+    ThreadPool is such a thin wrapper this probably works maybe
+
+    Uses the error_callback to flag if a worker died.
+    If it did, apply_async and join will terminate the pool and raise the original exception
+
+    Don't use a job submit function without overriding it in FailPool
+        Overriding enables error_callback for test job errors and tests for pool failure on job submit
+    """
+    pass
