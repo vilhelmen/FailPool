@@ -39,7 +39,7 @@ class FailPool(multiprocessing.pool.Pool):
         Apply async, but with a fail check and no error_callback
         """
         if error_callback:
-            raise ProcessingException('Failpool', 'Attempt to use error_callback in FailPool')
+            raise ValueError('Attempt to use error_callback in FailPool')
         if self.fail_flag.is_set() and self._state != multiprocessing.pool.TERMINATE:
             self._eat_it()
 
@@ -60,11 +60,14 @@ class FailPool(multiprocessing.pool.Pool):
 
     def _timeout_join(self, timeout):
         """
-        Join but with a timeout. Does not check fail state. Probably don't use this.
+        Join but with a timeout. Does not check fail state. Probably don't use this directly.
         :param timeout: timeout in seconds
         :return: Bool, whether the pool was joined or not
         """
-        assert self._state in (multiprocessing.pool.CLOSE, multiprocessing.pool.TERMINATE)
+        if self._state == multiprocessing.pool.RUN:
+            raise ValueError("Pool is still running")
+        elif self._state not in (multiprocessing.pool.CLOSE, multiprocessing.pool.TERMINATE):
+            raise ValueError("In unknown state")
         self._worker_handler.join(timeout=timeout)
         if self._worker_handler.is_alive():
             return False
