@@ -50,7 +50,7 @@ class FailPool(multiprocessing.pool.Pool):
 
         return super().apply_async(*args, error_callback=error_callback, **kwargs)
 
-    def join(self, bar=True, timeout=5):
+    def join(self, bar=True, update_freq=5):
         """
         Join, but periodically checks fail state
 
@@ -58,7 +58,7 @@ class FailPool(multiprocessing.pool.Pool):
             Due to queue management, the last 1000-100 jobs or so get consumed in a way that provides no visual feedback
             So, if you get stuck with 1 job remaining, that's the queue, not me.
             Total won't be accurate. It's the total at the time the bar was started, and we add one.
-        :param timeout: Timeout to update queue size in seconds
+        :param update_freq: Queue size update timout, in seconds
         """
         qsize_total = self._taskqueue.qsize()
         if bar:
@@ -66,7 +66,7 @@ class FailPool(multiprocessing.pool.Pool):
         else:
             log = logging.getLogger(__name__)
 
-        while not self._timeout_join(timeout):
+        while not self._timeout_join(update_freq):
             new_qsize = self._taskqueue.qsize()
             if bar:
                 pbar.update(qsize_total - new_qsize)

@@ -49,11 +49,11 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
     Submit/shutdown will re-raise the first exception a encountered
     """
 
-    def __init__(self, *args, check_timeout=5, use_bar=True, **kwargs):
+    def __init__(self, *args, update_freq=5, use_bar=True, **kwargs):
         """
 
         :param args: idk, forwarded to concurrent.futures.thread.ThreadPoolExecutor
-        :param check_timeout: Timeout to use when updating queue size on shutdown
+        :param update_freq: Timeout to use when updating queue size on shutdown
         :param use_bar: Use progress bar for queue size, False defaults to logger/INFO
         :param kwargs: idk, forwarded to concurrent.futures.thread.ThreadPoolExecutor
         """
@@ -61,7 +61,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
         self._fail_lock = threading.Lock()  # To be super safe. Processes don't need it, but we might
         self._fail_reason = Exception("UH-OH SPAGHETTIOS AN EXCEPTION WASN'T LOGGED??? MEMORY ISOLATED??")
         self._queue_dumped = False
-        self._check_timeout = check_timeout
+        self._check_timeout = update_freq
         self._use_bar = use_bar
         super().__init__(*args, **kwargs)
 
