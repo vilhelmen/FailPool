@@ -3,7 +3,7 @@
 import multiprocessing.pool
 import logging
 from threading import Event
-from tqdm import tqdm
+import progressbar
 
 
 # FIXME: Spooky inspection about not implementing all abstract methods
@@ -57,11 +57,12 @@ class FailPool(multiprocessing.pool.Pool):
         :param bar: Display a progress bar? Provides queue length updates to logger/INFO if False
             Due to queue management, the last 1000-100 jobs or so get consumed in a way that provides no visual feedback
             So, if you get stuck with 1 job remaining, that's the queue, not me.
+            Total won't be accurate. It's the total at the time the bar was started, and we add one.
         :param timeout: Timeout to update queue size in seconds
         """
         qsize = self._taskqueue.qsize()
         if bar:
-            pbar = tqdm(total=qsize+1, unit='job')
+            pbar = progressbar.ProgressBar(max_value=qsize+1)
         else:
             log = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class FailPool(multiprocessing.pool.Pool):
 
         if bar:
             pbar.update(1)  # Clean up the +1. total being hit triggers close, but let's keep it anyway
-            pbar.close()
+            pbar.finish()
 
         if self.fail_flag.is_set():
             self._eat_it()

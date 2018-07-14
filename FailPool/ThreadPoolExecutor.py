@@ -6,6 +6,7 @@ import threading
 import queue
 import logging
 import sys
+import progressbar
 
 
 class _FailWorkItem(concurrent.futures.thread._WorkItem):
@@ -125,7 +126,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
         if wait:
             qsize = self._work_queue.qsize()
             if self._use_bar:
-                pbar = tqdm(total=qsize + 1, unit='job')
+                pbar = progressbar.ProgressBar(max_value=qsize + 1)
             else:
                 log = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
 
             if self._use_bar:
                 pbar.update(1)
-                pbar.close()
+                pbar.finish()
 
             self._threads.clear()
 

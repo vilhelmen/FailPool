@@ -8,7 +8,7 @@ setup(name='FailPool',
       author='Will Starms',
       packages=find_packages(),
       license='Copyleft',
-      install_requires=['tqdm'],
+      install_requires=['progressbar2'],
       python_requires='>=3.6, <3.8'  # I hate this so much
       )
 

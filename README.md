@@ -1,6 +1,9 @@
 # FailPool
 
-What's the point of going on when something breaks
+What's the point of going on when something breaks. Also ETA reports.
+
+A progress bar with ETA will be written to stdout on pool join, or a job total to the logger.
+Pool totals will not be completely accurate because the job totals aren't tracked internally.
 
 ### FailPool
 
