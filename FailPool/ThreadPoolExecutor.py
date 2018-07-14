@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import concurrent.futures
+import concurrent.futures.thread
 import threading
 import queue
 import logging
@@ -47,15 +48,23 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
     Submit/shutdown will re-raise the first exception a encountered
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, check_timeout=5, use_bar=True, **kwargs):
+        """
+
+        :param args: idk, forwarded to concurrent.futures.thread.ThreadPoolExecutor
+        :param check_timeout: Timeout to use when updating queue size on shutdown
+        :param use_bar: Use progress bar for queue size, False defaults to logger/INFO
+        :param kwargs: idk, forwarded to concurrent.futures.thread.ThreadPoolExecutor
+        """
         self._fail_flag = threading.Event()  # WE FUCKED IT?? flag
         self._fail_lock = threading.Lock()  # To be super safe. Processes don't need it, but we might
         self._fail_reason = Exception("UH-OH SPAGHETTIOS AN EXCEPTION WASN'T LOGGED??? MEMORY ISOLATED??")
         self._queue_dumped = False
-        self._check_timeout = 10
+        self._check_timeout = check_timeout
+        self._use_bar = use_bar
         super().__init__(*args, **kwargs)
 
-    __init__.__doc__ = concurrent.futures.thread.ThreadPoolExecutorThreadPoolExecutor.__init__.__doc__
+    __init__.__doc__ = concurrent.futures.thread.ThreadPoolExecutor.__init__.__doc__
 
     def _dump_queue(self):
         """
@@ -114,16 +123,31 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
             self._work_queue.put(None)
 
         if wait:
+            qsize = self._work_queue.qsize()
+            if self._use_bar:
+                pbar = tqdm(total=qsize + 1, unit='job')
+            else:
+                log = logging.getLogger(__name__)
+
             # Keep checking fail flag, assuming we haven't already failed and dumped the queue
             for t in self._threads:
                 while t.is_alive():
                     t.join(timeout=self._check_timeout)
                     if not self._queue_dumped:  # if we dumped the queue, nothing to do but move on
-                        logging.info(f'~{self._work_queue.qsize()} jobs remaining')
+                        new_qsize = self._taskqueue.qsize()
+                        if bar:
+                            pbar.update(qsize - new_qsize)
+                        else:
+                            log.info(f"~{new_qsize} jobs remaining...")
+                        qsize = new_qsize
                         # with self._fail_lock: # Once again, don't bother. If we miss it by one iteration, who cares
                         if self._fail_flag.is_set():
                             self._dump_queue()
                             self._check_timeout = None  # we've done what we can, wait on joins
+
+            if self._use_bar:
+                pbar.update(1)
+                pbar.close()
 
             self._threads.clear()
 

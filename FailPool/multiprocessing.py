@@ -3,8 +3,10 @@
 import multiprocessing.pool
 import logging
 from threading import Event
+from tqdm import tqdm
 
 
+# FIXME: Spooky inspection about not implementing all abstract methods
 class FailPool(multiprocessing.pool.Pool):
     """
     Multiprocessing Pool that chlorinates the pool when a worker dies in it
@@ -48,14 +50,35 @@ class FailPool(multiprocessing.pool.Pool):
 
         return super().apply_async(*args, error_callback=error_callback, **kwargs)
 
-    def join(self):
+    def join(self, bar=True, timeout=5):
         """
         Join, but periodically checks fail state
+
+        :param bar: Display a progress bar? Provides queue length updates to logger/INFO if False
+            Due to queue management, the last 1000-100 jobs or so get consumed in a way that provides no visual feedback
+            So, if you get stuck with 1 job remaining, that's the queue, not me.
+        :param timeout: Timeout to update queue size in seconds
         """
-        while not self._timeout_join(10):
-            logging.info(f'~{self._taskqueue.qsize()} jobs remaining')
+        qsize = self._taskqueue.qsize()
+        if bar:
+            pbar = tqdm(total=qsize+1, unit='job')
+        else:
+            log = logging.getLogger(__name__)
+
+        while not self._timeout_join(timeout):
+            new_qsize = self._taskqueue.qsize()
+            if bar:
+                pbar.update(qsize - new_qsize)
+            else:
+                log.info(f"~{new_qsize} jobs remaining...")
+            qsize = new_qsize
             if self.fail_flag.is_set():
                 self._eat_it()
+
+        if bar:
+            pbar.update(1)  # Clean up the +1. total being hit triggers close, but let's keep it anyway
+            pbar.close()
+
         if self.fail_flag.is_set():
             self._eat_it()
 
@@ -79,6 +102,7 @@ class FailPool(multiprocessing.pool.Pool):
         return True
 
 
+# FIXME: Spooky inspection about not implementing all abstract methods
 class FailThreadPool(multiprocessing.pool.ThreadPool, FailPool):
     """
     Multiprocessing ThreadPool that chlorinates the pool when a worker dies in it.
