@@ -9,5 +9,6 @@ setup(name='FailPool',
       packages=find_packages(),
       license='Copyleft',
       install_requires=['tqdm'],
-      python_requires='~=3.6, ~=3.7'
+      python_requires='>=3.6, <3.8'  # I hate this so much
       )
+
