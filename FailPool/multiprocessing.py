@@ -60,19 +60,18 @@ class FailPool(multiprocessing.pool.Pool):
             Total won't be accurate. It's the total at the time the bar was started, and we add one.
         :param timeout: Timeout to update queue size in seconds
         """
-        qsize = self._taskqueue.qsize()
+        qsize_total = self._taskqueue.qsize()
         if bar:
-            pbar = progressbar.ProgressBar(max_value=qsize+1)
+            pbar = progressbar.ProgressBar(max_value=qsize_total + 1)
         else:
             log = logging.getLogger(__name__)
 
         while not self._timeout_join(timeout):
             new_qsize = self._taskqueue.qsize()
             if bar:
-                pbar.update(qsize - new_qsize)
+                pbar.update(qsize_total - new_qsize)
             else:
                 log.info(f"~{new_qsize} jobs remaining...")
-            qsize = new_qsize
             if self.fail_flag.is_set():
                 self._eat_it()
 

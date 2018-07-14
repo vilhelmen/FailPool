@@ -124,9 +124,9 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
             self._work_queue.put(None)
 
         if wait:
-            qsize = self._work_queue.qsize()
+            total_qsize = self._work_queue.qsize()
             if self._use_bar:
-                pbar = progressbar.ProgressBar(max_value=qsize + 1)
+                pbar = progressbar.ProgressBar(max_value=total_qsize + 1)
             else:
                 log = logging.getLogger(__name__)
 
@@ -137,10 +137,10 @@ class FailThreadPoolExecutor(concurrent.futures.thread.ThreadPoolExecutor):
                     if not self._queue_dumped:  # if we dumped the queue, nothing to do but move on
                         new_qsize = self._taskqueue.qsize()
                         if bar:
-                            pbar.update(qsize - new_qsize)
+                            pbar.update(total_qsize - new_qsize)
                         else:
                             log.info(f"~{new_qsize} jobs remaining...")
-                        qsize = new_qsize
+
                         # with self._fail_lock: # Once again, don't bother. If we miss it by one iteration, who cares
                         if self._fail_flag.is_set():
                             self._dump_queue()
