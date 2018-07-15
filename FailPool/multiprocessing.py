@@ -50,6 +50,21 @@ class FailPool(multiprocessing.pool.Pool):
 
         return super().apply_async(*args, error_callback=error_callback, **kwargs)
 
+    def map(self, func, iterable, chunksize=None):
+        if self.fail_flag.is_set() and self._state != multiprocessing.pool.TERMINATE:
+            self._eat_it()
+        return self._map_async(func, iterable, mapstar, chunksize, error_callback=self._error_callback_override).get()
+
+    def map_async(self, func, iterable, chunksize=None, callback=None,
+                  error_callback=None):
+        if error_callback:
+            raise ValueError('Attempt to use error_callback in FailPool')
+        if self.fail_flag.is_set() and self._state != multiprocessing.pool.TERMINATE:
+            self._eat_it()
+        error_callback = self._error_callback_override
+        return self._map_async(func, iterable, mapstar, chunksize, callback,
+                               error_callback)
+
     def join(self, bar=True, update_freq=5):
         """
         Join, but periodically checks fail state
