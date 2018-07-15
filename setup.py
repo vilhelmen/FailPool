@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='FailPool',
-      version='0.0.2',
+      version='0.0.3',
       description='Processing pools that grow up and blow away.',
       author='Will Starms',
       packages=find_packages(),
