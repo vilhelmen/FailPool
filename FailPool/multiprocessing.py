@@ -6,6 +6,7 @@ from threading import Event
 import progressbar
 
 
+# TODO: Make infinitely better by wrapping their error callback with ours
 # FIXME: Spooky inspection about not implementing all abstract methods
 class FailPool(multiprocessing.pool.Pool):
     """
@@ -53,7 +54,8 @@ class FailPool(multiprocessing.pool.Pool):
     def map(self, func, iterable, chunksize=None):
         if self.fail_flag.is_set() and self._state != multiprocessing.pool.TERMINATE:
             self._eat_it()
-        return self._map_async(func, iterable, mapstar, chunksize, error_callback=self._error_callback_override).get()
+        return self._map_async(func, progressbar.progressbar(iterable), multiprocessing.pool.mapstar, chunksize,
+                               error_callback=self._error_callback_override).get()
 
     def map_async(self, func, iterable, chunksize=None, callback=None,
                   error_callback=None):
@@ -62,7 +64,7 @@ class FailPool(multiprocessing.pool.Pool):
         if self.fail_flag.is_set() and self._state != multiprocessing.pool.TERMINATE:
             self._eat_it()
         error_callback = self._error_callback_override
-        return self._map_async(func, iterable, mapstar, chunksize, callback,
+        return self._map_async(func, iterable, multiprocessing.pool.mapstar, chunksize, callback,
                                error_callback)
 
     def join(self, bar=True, update_freq=5):
