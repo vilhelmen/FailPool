@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-import multiprocessing.pool
 import logging
+import multiprocessing.pool
 from threading import Event
+
 import progressbar
 
 
@@ -104,7 +105,7 @@ class FailPool(multiprocessing.pool.Pool):
 
 
 # FIXME: Spooky inspection about not implementing all abstract methods
-class FailThreadPool(multiprocessing.pool.ThreadPool, FailPool):
+class FailThreadPool(FailPool, multiprocessing.pool.ThreadPool):
     """
     Multiprocessing ThreadPool that chlorinates the pool when a worker dies in it.
 
